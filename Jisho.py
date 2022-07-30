@@ -1,4 +1,3 @@
-from array import array
 import csv
 import os
 import sys
@@ -66,7 +65,6 @@ def get_kanji_info(driver):
     get_field(
         on_words_xpath, pattern="On", alt_pattern="", position=7, info_array=kanji_info, words=True
         )
-    print(kanji_info)
     return kanji_info
 
 if __name__ == "__main__":
