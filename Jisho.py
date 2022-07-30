@@ -1,5 +1,6 @@
 import csv
 import os
+import sys
 from dotenv import load_dotenv
 from typing import List
 from selenium import webdriver
@@ -43,7 +44,7 @@ def get_kanji_info(driver):
         if "On:" in on_readings.text:
             kanji_info.append(on_readings.text.replace("On: ", ""))
     except:
-        kanji_info.append("")
+        if len(kanji_info) < 3: kanji_info.append("")
     try:
         jlpt = driver.find_element_by_xpath(
             "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[2]/div/div[2]"
@@ -78,36 +79,44 @@ def get_kanji_info(driver):
         if "On" in words_on.text:
             kanji_info.append(clean_words(words_on))
     except:
-        kanji_info.append("")
+        if len(kanji_info) < 7: kanji_info.append("")
     return kanji_info
 
 if __name__ == "__main__":
     load_dotenv()
-    SOURCE = os.getenv('SOURCE')
     DRIVER_PATH = os.getenv('DRIVER_PATH')
-    OUTPUT = os.getenv("OUTPUT")
+    try:
+        SOURCE = sys.argv[1]
+        OUTPUT = sys.argv[2]
+    except:
+        print("Bad arguments.\nUse: jisho_scrapper <Source> <Output file>")
+        sys.exit(1)
     driver = webdriver.Chrome(executable_path=DRIVER_PATH)
-    driver.implicitly_wait(15)
     driver.get(SOURCE)
-    with open(OUTPUT, "w", encoding="UTF8", newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(HEADERS)
-        while True:
+    try:
+        file = open(OUTPUT, "w", encoding="UTF8", newline='') 
+    except:
+        print("Not a valid output file.")  
+        driver.quit()
+        sys.exit(1)
+    writer = csv.writer(file)
+    writer.writerow(HEADERS)
+    while True:
+        kanjis = driver.find_elements_by_class_name(
+            "character"
+            )
+        for i in range(len(kanjis)):
+            kanjis[i].click()
+            kanji_info = get_kanji_info(driver)
+            writer.writerow(kanji_info)
+            driver.back()
             kanjis = driver.find_elements_by_class_name(
                 "character"
                 )
-            for i in range(len(kanjis)):
-                kanjis[i].click()
-                kanji_info = get_kanji_info(driver)
-                writer.writerow(kanji_info)
-                driver.back()
-                kanjis = driver.find_elements_by_class_name(
-                    "character"
-                    )
-            try:
-                more = driver.find_element_by_class_name("more")
-            except: 
-                break
-            more.click()
+        try:
+            more = driver.find_element_by_class_name("more")
+        except: 
+            break
+        more.click()
     file.close()
     driver.quit()
