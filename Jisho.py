@@ -1,3 +1,4 @@
+from array import array
 import csv
 import os
 import sys
@@ -9,77 +10,63 @@ from selenium import webdriver
 HEADERS = [
     "Kanji", "Kun'yomi", "On'yomi", "JLPT", "Frequency (Out of 2500)", "Kun'yomi Examples", "On'yomi examples"
     ]
+
 def clean_words(words: List):
     words_arr = words.text.split('\n')
     for i in range(len(words_arr)):
         words_arr[i] = words_arr[i].split(" ")
-        words_arr[i] = words_arr[i][0:2]
         words_arr[i][1] = words_arr[i][1].replace("【","(").replace("】", ")")
-        words_arr[i] = " ".join(map(str,words_arr[i]))
+        words_arr[i] = " ".join(map(str,words_arr[i][0:2]))
     cleaned_words = "\n".join(words_arr[1:])
     return cleaned_words
 
+def get_field(xpath, pattern="", alt_pattern="", position=1, info_array=[], words = False):
+    try:
+        field = driver.find_element_by_xpath(xpath)
+        if pattern in field.text:
+            if not words:
+                info_array.append(field.text.replace(pattern, ""))
+                return
+            info_array.append(clean_words(field))
+            return
+        else: 
+            info_array.append("")
+            if not words:
+                info_array.append(field.text.replace(alt_pattern,""))
+                return
+            info_array.append(clean_words(field))    
+    except:
+        if len(info_array) < position: info_array.append("")
+
 def get_kanji_info(driver):
     kanji_info = []
-    kanji = driver.find_element_by_xpath(
-        "/html/body/div[3]/div/div/div[1]/div/div[1]/div[1]/div/div[1]/h1"
+    kanji_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[1]/div/div[1]/h1"
+    get_field(kanji_xpath, info_array=kanji_info)
+    kun_reading_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[1]/div[2]/dl[1]"
+    get_field(
+        kun_reading_xpath, pattern="Kun: ", alt_pattern="On: ", position=2, info_array=kanji_info
         )
-    kanji_info.append(kanji.text)
-    try:
-        kun_readings = driver.find_element_by_xpath(
-        "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[1]/div[2]/dl[1]"
+    on_reading_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[1]/div[2]/dl[2]"
+    get_field(
+        on_reading_xpath, pattern="On: ", alt_pattern="", position=3, info_array=kanji_info
         )
-        if "Kun:" in kun_readings.text:
-            kanji_info.append(kun_readings.text.replace("Kun: ", ""))
-        else: 
-            kanji_info.append("")
-            on_readings = kun_readings
-            kanji_info.append(on_readings.text.replace("On: ", ""))
-    except:
-        kanji_info.append("")
-    try:
-        on_readings = driver.find_element_by_xpath(
-            "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[1]/div[2]/dl[2]"
-            )
-        if "On:" in on_readings.text:
-            kanji_info.append(on_readings.text.replace("On: ", ""))
-    except:
-        if len(kanji_info) < 3: kanji_info.append("")
-    try:
-        jlpt = driver.find_element_by_xpath(
-            "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[2]/div/div[2]"
-            ) 
-        kanji_info.append(jlpt.text.replace("JLPT level ", ""))
-    except:
-        kanji_info.append("")
-    try:
-        frequency = driver.find_element_by_xpath(
-            "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[2]/div/div[3]"
-            )
-        if "of 2500 most used kanji in newspapers" in frequency.text:
-            kanji_info.append(frequency.text.replace(" of 2500 most used kanji in newspapers", ""))
-    except:
-        kanji_info.append("")
-    try:
-        words_kun = driver.find_element_by_xpath(
-            "/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[2]"
-            )
-        if "Kun" in words_kun.text:
-            kanji_info.append(clean_words(words_kun))
-        else:
-            kanji.append("")
-            words_on = words_kun
-            kanji_info.append(clean_words(words_on))
-    except:
-        kanji_info.append("")
-    try:
-        words_on = driver.find_element_by_xpath(
-            "/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[1]"
-            )
-        if "On" in words_on.text:
-            kanji_info.append(clean_words(words_on))
-    except:
-        if len(kanji_info) < 7: kanji_info.append("")
+    jlpt_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[2]/div/div[2]"
+    get_field(
+        jlpt_xpath, pattern="JLPT level", position=4, info_array=kanji_info
+        )
+    frequency_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[2]/div/div[3]"
+    get_field(
+        frequency_xpath, pattern=" of 2500 most used kanji in newspapers", position=5, info_array=kanji_info
+        )
+    kun_words_xpath="/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[2]"
+    get_field(
+        kun_words_xpath, pattern="Kun", alt_pattern="", position=6, info_array=kanji_info, words=True
+        )
+    on_words_xpath="/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[1]"
+    get_field(
+        on_words_xpath, pattern="On", alt_pattern="", position=7, info_array=kanji_info, words=True
+        )
+    print(kanji_info)
     return kanji_info
 
 if __name__ == "__main__":
