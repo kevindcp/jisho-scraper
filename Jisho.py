@@ -7,7 +7,7 @@ from selenium import webdriver
 
 
 HEADERS = [
-    "Kanji", "Kun'yomi", "On'yomi", "JLPT", "Frequency (Out of 2500)", "Kun'yomi Examples", "On'yomi examples"
+    "Kanji", "Meanings", "Kun'yomi", "On'yomi", "JLPT", "Frequency (Out of 2500)", "Kun'yomi Examples", "On'yomi examples"
     ]
 
 def clean_words(words: List):
@@ -41,29 +41,31 @@ def get_kanji_info(driver):
     kanji_info = []
     kanji_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[1]/div/div[1]/h1"
     get_field(kanji_xpath, info_array=kanji_info)
+    meanings_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[1]/div[1]"
+    get_field(meanings_xpath, info_array=kanji_info)
     kun_reading_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[1]/div[2]/dl[1]"
     get_field(
-        kun_reading_xpath, pattern="Kun: ", alt_pattern="On: ", position=2, info_array=kanji_info
+        kun_reading_xpath, pattern="Kun: ", alt_pattern="On: ", position=3, info_array=kanji_info
         )
     on_reading_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[1]/div[2]/dl[2]"
     get_field(
-        on_reading_xpath, pattern="On: ", alt_pattern="", position=3, info_array=kanji_info
+        on_reading_xpath, pattern="On: ", alt_pattern="", position=4, info_array=kanji_info
         )
     jlpt_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[2]/div/div[2]"
     get_field(
-        jlpt_xpath, pattern="JLPT level", position=4, info_array=kanji_info
+        jlpt_xpath, pattern="JLPT level", position=5, info_array=kanji_info
         )
     frequency_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[2]/div/div[3]"
     get_field(
-        frequency_xpath, pattern=" of 2500 most used kanji in newspapers", position=5, info_array=kanji_info
+        frequency_xpath, pattern=" of 2500 most used kanji in newspapers", position=6, info_array=kanji_info
         )
     kun_words_xpath="/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[2]"
     get_field(
-        kun_words_xpath, pattern="Kun", alt_pattern="", position=6, info_array=kanji_info, words=True
+        kun_words_xpath, pattern="Kun", alt_pattern="", position=7, info_array=kanji_info, words=True
         )
     on_words_xpath="/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[1]"
     get_field(
-        on_words_xpath, pattern="On", alt_pattern="", position=7, info_array=kanji_info, words=True
+        on_words_xpath, pattern="On", alt_pattern="", position=8, info_array=kanji_info, words=True
         )
     return kanji_info
 
