@@ -8,18 +8,21 @@ from selenium import webdriver
 
 HEADERS = [
     "Kanji", "Meanings", "Kun'yomi", "On'yomi", "JLPT", "Frequency (Out of 2500)", "Kun'yomi Examples", "On'yomi examples"
-    ]
+]
+
 
 def clean_words(words: List):
     words_arr = words.text.split('\n')
     for i in range(len(words_arr)):
         words_arr[i] = words_arr[i].split(" ")
-        words_arr[i][1] = words_arr[i][1].replace("【","(").replace("】", ")")
-        words_arr[i] = " ".join(map(str,words_arr[i][0:2]))
-    cleaned_words = "\n".join(words_arr[1:])
+        words_arr[i][1] = words_arr[i][1].replace("【", "(").replace("】", ")")
+        words_arr[i].insert(2, ":")
+        words_arr[i] = " ".join(map(str, words_arr[i][0:]))
+    cleaned_words = '\n'.join(words_arr[1:])
     return cleaned_words
 
-def get_field(xpath, pattern="", alt_pattern="", position=1, info_array=[], words = False):
+
+def get_field(xpath, pattern="", alt_pattern="", position=1, info_array=[], words=False):
     try:
         field = driver.find_element_by_xpath(xpath)
         if pattern in field.text:
@@ -28,14 +31,16 @@ def get_field(xpath, pattern="", alt_pattern="", position=1, info_array=[], word
                 return
             info_array.append(clean_words(field))
             return
-        else: 
+        else:
             info_array.append("")
             if not words:
-                info_array.append(field.text.replace(alt_pattern,""))
+                info_array.append(field.text.replace(alt_pattern, ""))
                 return
-            info_array.append(clean_words(field))    
+            info_array.append(clean_words(field))
     except:
-        if len(info_array) < position: info_array.append("")
+        if len(info_array) < position:
+            info_array.append("")
+
 
 def get_kanji_info(driver):
     kanji_info = []
@@ -46,28 +51,30 @@ def get_kanji_info(driver):
     kun_reading_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[1]/div[2]/dl[1]"
     get_field(
         kun_reading_xpath, pattern="Kun: ", alt_pattern="On: ", position=3, info_array=kanji_info
-        )
+    )
     on_reading_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[1]/div[2]/dl[2]"
     get_field(
         on_reading_xpath, pattern="On: ", alt_pattern="", position=4, info_array=kanji_info
-        )
+    )
     jlpt_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[2]/div/div[2]"
     get_field(
         jlpt_xpath, pattern="JLPT level", position=5, info_array=kanji_info
-        )
+    )
     frequency_xpath = "/html/body/div[3]/div/div/div[1]/div/div[1]/div[2]/div/div[2]/div/div[3]"
     get_field(
         frequency_xpath, pattern=" of 2500 most used kanji in newspapers", position=6, info_array=kanji_info
-        )
-    kun_words_xpath="/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[2]"
+    )
+    kun_words_xpath = "/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[2]"
     get_field(
         kun_words_xpath, pattern="Kun", alt_pattern="", position=7, info_array=kanji_info, words=True
-        )
-    on_words_xpath="/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[1]"
+    )
+    on_words_xpath = "/html/body/div[3]/div/div/div[1]/div/div[3]/div[2]/div/div/div[1]/div[1]"
     get_field(
         on_words_xpath, pattern="On", alt_pattern="", position=8, info_array=kanji_info, words=True
-        )
+    )
+    print(kanji_info)
     return kanji_info
+
 
 if __name__ == "__main__":
     load_dotenv()
@@ -81,9 +88,9 @@ if __name__ == "__main__":
     driver = webdriver.Chrome(executable_path=DRIVER_PATH)
     driver.get(SOURCE)
     try:
-        file = open(OUTPUT, "w", encoding="UTF8", newline='') 
+        file = open(OUTPUT, "w", encoding="UTF8", newline='')
     except:
-        print("Not a valid output file.")  
+        print("Not a valid output file.")
         driver.quit()
         sys.exit(1)
     writer = csv.writer(file)
@@ -91,7 +98,7 @@ if __name__ == "__main__":
     while True:
         kanjis = driver.find_elements_by_class_name(
             "character"
-            )
+        )
         for i in range(len(kanjis)):
             kanjis[i].click()
             kanji_info = get_kanji_info(driver)
@@ -99,10 +106,10 @@ if __name__ == "__main__":
             driver.back()
             kanjis = driver.find_elements_by_class_name(
                 "character"
-                )
+            )
         try:
             more = driver.find_element_by_class_name("more")
-        except: 
+        except:
             break
         more.click()
     file.close()
