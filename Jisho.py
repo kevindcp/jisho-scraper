@@ -11,14 +11,17 @@ HEADERS = [
 ]
 
 
+def clean_fun(words_arr: List):
+    words_arr = words_arr.split(" ")
+    words_arr[1] = words_arr[1].replace("【", "(").replace("】", ")")
+    words_arr.insert(2, ":")
+    words_arr = " ".join(map(str, words_arr))
+    return words_arr
+
+
 def clean_words(words: List):
     words_arr = words.text.split('\n')
-    for i in range(len(words_arr)):
-        words_arr[i] = words_arr[i].split(" ")
-        words_arr[i][1] = words_arr[i][1].replace("【", "(").replace("】", ")")
-        words_arr[i].insert(2, ":")
-        words_arr[i] = " ".join(map(str, words_arr[i][0:]))
-    cleaned_words = '\n'.join(words_arr[1:])
+    cleaned_words = '\n'.join([clean_fun(word) for word in words_arr][1:])
     return cleaned_words
 
 
@@ -72,7 +75,6 @@ def get_kanji_info(driver):
     get_field(
         on_words_xpath, pattern="On", alt_pattern="", position=8, info_array=kanji_info, words=True
     )
-    print(kanji_info)
     return kanji_info
 
 
